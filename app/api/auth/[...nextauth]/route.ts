@@ -95,7 +95,7 @@ export const authOptions = {
   },
 
   pages: {
-    signIn: "/login",        // We will create this page later
+    signIn: "/login",        // I will create this page later
   },
 
   secret: process.env.NEXTAUTH_SECRET,   // Exists in .env
