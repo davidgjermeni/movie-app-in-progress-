@@ -3,25 +3,70 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function RegisterPage(e: React.FormEvent){
-    e.preventDefault();
-
+export default  function RegisterPage(){
+    const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const allowedDomains = ["gmail.com","outlook.com","hotmail.com"]
+    const emailDomain = email.split("@")[1];
 
-    if (!email || !password){
-        alert("Please fill in all fields.")
-        return;
+    async function handleSubmit(e: React.FormEvent){
+        e.preventDefault(); //no refresh
+        if (!email || !password){
+            alert("Please fill in all fields.")
+            return;
+        }
+
+        if (!allowedDomains.includes(emailDomain)){
+            alert("Only Gmail, Outlook and Hotmail are allowed.")
+            return;
+        }
+
+        if (password.length < 8){
+            alert("Password needs to be at least 8 characters.")
+            return;
+        }
+
+        //form is talking to route.ts
+        const res = await fetch("/api/register",{
+            method: "POST", //sending data
+            headers: {"Content-Type": "application/json"}, //hey, its written in JSON format
+            body: JSON.stringify({email, password}), //The content.
+        });
+
+        const data = await res.json();
+
+        // did something go wrong?
+        // If status was 200-299(success -> true)
+        //If status was anything else like 400 or 409 (errors -> false)
+        if (!res.ok){
+            alert(data.error)// display the error message
+            return;
+        }
+        router.push("/login")
     }
 
-    if (password.length < 8){
-        alert("Password needs to be at least 8 characters.")
-        return;
-    }
+    return(
+        <div>
+            <form onSubmit={handleSubmit}>
+                <input
+                    type = "email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                />
 
-
-
-
-
-    
+                <input
+                    type = "password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                />
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+    )
+//user types → boxes fill up → user hits submit → 
+//validate → send to backend → show success or error
 }
+

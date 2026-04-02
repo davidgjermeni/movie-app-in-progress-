@@ -5,12 +5,22 @@ import { PrismaClient } from "@prisma/client"; //adding our translator
 
 const prisma = new PrismaClient(); // enabling the translator ( passing it to a variable so we can use it )
 
-async function POST(req: NextRequest){ // getting the request from Next.js
+export async function POST(req: NextRequest){ // getting the request from Next.js
     const {email, password} = await req.json(); // destructing the data from the request to variables
+    const allowedDomains = ["gmail.com","outlook.com","hotmail.com"]
+    const emailDomain = email.split("@")[1];
 
     if (!email || !password){
         // if fields are missing, sent a error response back ( 400 = bad request )
         return NextResponse.json({error: "All fields required"}, {status: 400});
+    }
+
+    if(!allowedDomains.includes(emailDomain)){
+        return NextResponse.json(
+            {error: "Only Gmail, Outlook and Hotmail are allowed."},
+            {status: 400}
+            
+        );
     }
 
     //prisma searches and finds if the email already exists. Result ( boolean ) added to a variable
