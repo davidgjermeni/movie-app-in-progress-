@@ -43,7 +43,7 @@ export default  function RegisterPage(){
             alert(data.error)// display the error message
             return;
         }
-        router.push("/login")
+        router.push("/login"); // redirect to login
     }
 
     return(
