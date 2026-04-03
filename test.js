@@ -1,17 +1,10 @@
-import 'dotenv/config';
-import prisma from './lib/prisma.js';
-import bcrypt from 'bcryptjs';
+import { Resend } from 'resend';
 
+const resend = new Resend('re_TEeZ4Jq4_2b3S7HcKyvLhUHoD8FNpg1Kf');
 
-async function main(){
-    const hashedPassword = await bcrypt.hash("12345", 10);
-    const user = await prisma.user.create({
-        data:{
-            email: "test@gmail.com",
-            password: hashedPassword,
-            role: "USER",
-
-    }});
-    console.log(user);
-}
-main();
+resend.emails.send({
+  from: 'onboarding@resend.dev',
+  to: 'davidgjermeni@gmail.com',
+  subject: 'Hello World',
+  html: '<p>Congrats on sending your <strong>first email</strong>!</p>'
+});

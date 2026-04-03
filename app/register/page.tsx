@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react"; // to check if anyone is logged in
 
 export default  function RegisterPage(){
     const router = useRouter();
@@ -9,6 +10,19 @@ export default  function RegisterPage(){
     const [password, setPassword] = useState("");
     const allowedDomains = ["gmail.com","outlook.com","hotmail.com"]
     const emailDomain = email.split("@")[1];
+    //useSession has data: user info and status.
+    //destructing and renaming the "data" to "session"
+    //for readability
+    const {data: session, status} = useSession();
+
+    if(status === "loading"){
+        return null;
+    }
+    if (status === "authenticated"){
+            router.push("/homepage");
+            return null;
+    }
+
 
     async function handleSubmit(e: React.FormEvent){
         e.preventDefault(); //no refresh

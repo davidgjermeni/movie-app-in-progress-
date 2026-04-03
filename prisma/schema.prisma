@@ -21,6 +21,10 @@ model User{
   role      Role  @default(USER)
   reservations Reservation[]
   createdAt DateTime  @default(now())
+  verificationCode String?
+  verificationExpiry DateTime?
+  isVerified  Boolean @default(false)
+
 }
 
 model Movie{

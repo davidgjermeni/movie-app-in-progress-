@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server"; // reads and sents something from/to the user
 import bcrypt from "bcryptjs"; // adding our encryptor
 import { PrismaClient } from "@prisma/client"; //adding our translator
+import { Resend } from "resend";
 
 const prisma = new PrismaClient(); // enabling the translator ( passing it to a variable so we can use it )
 
@@ -9,6 +10,9 @@ export async function POST(req: NextRequest){ // getting the request from Next.j
     const {email, password} = await req.json(); // destructing the data from the request to variables
     const allowedDomains = ["gmail.com","outlook.com","hotmail.com"]
     const emailDomain = email.split("@")[1];
+    const resend = new Resend('re_TEeZ4Jq4_2b3S7HcKyvLhUHoD8FNpg1Kf');
+
+    
 
     if (!email || !password){
         // if fields are missing, sent a error response back ( 400 = bad request )
