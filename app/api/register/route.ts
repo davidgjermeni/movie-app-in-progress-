@@ -3,16 +3,17 @@ import { NextRequest, NextResponse } from "next/server"; // reads and sents some
 import bcrypt from "bcryptjs"; // adding our encryptor
 import { PrismaClient } from "@prisma/client"; //adding our translator
 import { Resend } from "resend";
+import { EmailTemplate } from "@/components/email-template";
 
 const prisma = new PrismaClient(); // enabling the translator ( passing it to a variable so we can use it )
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest){ // getting the request from Next.js
     const {email, password} = await req.json(); // destructing the data from the request to variables
     const allowedDomains = ["gmail.com","outlook.com","hotmail.com"]
     const emailDomain = email.split("@")[1];
-    const resend = new Resend('re_TEeZ4Jq4_2b3S7HcKyvLhUHoD8FNpg1Kf');
-
-    
+    const verificationCode = Math.floor(100000 * Math.random() * 900000).toString();
+    const verificationExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
     if (!email || !password){
         // if fields are missing, sent a error response back ( 400 = bad request )
@@ -41,7 +42,13 @@ export async function POST(req: NextRequest){ // getting the request from Next.j
     const hashed = await bcrypt.hash(password, 10);
 
     await prisma.user.create({
-        data: {email, password: hashed},
+        data: {
+            email, 
+            password: hashed,
+            verificationCode,
+            verificationExpiry,
+            isVerified: false,
+        },
     });
 
     //201 = created!
