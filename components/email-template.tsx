@@ -1,19 +1,23 @@
-import * as React from 'react';
+import * as React from "react";
+import { Html, Head, Body, Container, Text } from "@react-email/components";
 
 interface EmailTemplateProps {
-    email: string;
-    verificationCode: string;
+  email: string;
+  verificationCode: string;
 }
 
-
 export function EmailTemplate({ verificationCode, email }: EmailTemplateProps) {
-    const emailName = email.split(("@")[0])
-    return (
-        <div>
-         <h1>Welcome, {emailName}!</h1>
-        <p>Your verification code is: </p>
-         <h2><b>{verificationCode}</b></h2>
-         <p>This code expires in 10 minutes.</p>
-        </div>
-     );
+  const emailName = email.split("@")[0];
+  return (
+    <Html>
+      <Head />
+      <Body>
+        <Container>
+          <Text>Hello {emailName},</Text>
+          <Text>Your verification code is: <strong>{verificationCode}</strong></Text>
+          <Text>This code expires in 5 minutes.</Text>
+        </Container>
+      </Body>
+    </Html>
+  );
 }

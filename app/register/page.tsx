@@ -8,6 +8,7 @@ export default  function RegisterPage(){
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [verifCode, setverifCode] = useState("");
     const allowedDomains = ["gmail.com","outlook.com","hotmail.com"]
     const emailDomain = email.split("@")[1];
     //useSession has data: user info and status.
@@ -41,23 +42,30 @@ export default  function RegisterPage(){
             return;
         }
 
-        //form is talking to route.ts
-        const res = await fetch("/api/register",{
+        //form is talking to sendCode api
+        const sendCode = await fetch("/api/register",{
+            method: "POST", //sending data
+            headers: {"Content-Type": "application/json"}, //hey, its written in JSON format
+            body: JSON.stringify({email, verifCode}), //The content.
+        });
+
+        //form is talking to verifyRegister api
+        const verifyRegister = await fetch("/api/register",{
             method: "POST", //sending data
             headers: {"Content-Type": "application/json"}, //hey, its written in JSON format
             body: JSON.stringify({email, password}), //The content.
         });
 
-        const data = await res.json();
+        const data = await verifyRegister.json();
 
         // did something go wrong?
         // If status was 200-299(success -> true)
         //If status was anything else like 400 or 409 (errors -> false)
-        if (!res.ok){
+        if (!verifyRegister.ok){
             alert(data.error)// display the error message
             return;
         }
-        router.push("/login"); // redirect to login
+        // router.push("/login"); // redirect to login
     }
 
     return(
@@ -69,7 +77,13 @@ export default  function RegisterPage(){
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                 />
-
+                <input
+                    type = "value"
+                    placeholder = "Verification Code"
+                    value={verifCode}
+                    onChange = {e => setverifCode(e.target.value)}
+                />
+                <button type="button">Send Code</button>
                 <input
                     type = "password"
                     placeholder="Password"
@@ -83,4 +97,3 @@ export default  function RegisterPage(){
 //user types → boxes fill up → user hits submit → 
 //validate → send to backend → show success or error
 }
-
