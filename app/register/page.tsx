@@ -24,10 +24,31 @@ export default  function RegisterPage(){
             return null;
     }
 
+    async function handleSendCode(){
+        if (!email){
+            alert("Please enter your email first.")
+            return;
+        }
+        //form is talking to sendCode api
+        const sendCode = await fetch("/api/sendCode",{
+            method: "POST", //sending data
+            headers: {"Content-Type": "application/json"}, //hey, its written in JSON format
+            body: JSON.stringify({email }), //The content.
+        });
 
+        const data = await sendCode.json();
+
+        if (!sendCode.ok){
+            alert(data.error);
+            return;
+        }
+
+        alert("Email containing the verification code sent!")
+
+    }
     async function handleSubmit(e: React.FormEvent){
         e.preventDefault(); //no refresh
-        if (!email || !password){
+        if (!email || !password || !verifCode){
             alert("Please fill in all fields.")
             return;
         }
@@ -42,30 +63,29 @@ export default  function RegisterPage(){
             return;
         }
 
-        //form is talking to sendCode api
-        const sendCode = await fetch("/api/register",{
-            method: "POST", //sending data
-            headers: {"Content-Type": "application/json"}, //hey, its written in JSON format
-            body: JSON.stringify({email, verifCode}), //The content.
-        });
+        try{
+            //form is talking to verifyRegister api
+            const verifyRegister = await fetch("/api/verifyRegister",{
+                method: "POST", //sending data
+                headers: {"Content-Type": "application/json"}, //hey, its written in JSON format
+                body: JSON.stringify({email, password, verifCode}), //The content.
+            });
 
-        //form is talking to verifyRegister api
-        const verifyRegister = await fetch("/api/register",{
-            method: "POST", //sending data
-            headers: {"Content-Type": "application/json"}, //hey, its written in JSON format
-            body: JSON.stringify({email, password}), //The content.
-        });
+            const data = await verifyRegister.json();
 
-        const data = await verifyRegister.json();
-
-        // did something go wrong?
-        // If status was 200-299(success -> true)
-        //If status was anything else like 400 or 409 (errors -> false)
-        if (!verifyRegister.ok){
-            alert(data.error)// display the error message
-            return;
+            // did something go wrong?
+            // If status was 200-299(success -> true)
+            //If status was anything else like 400 or 409 (errors -> false)
+            if (!verifyRegister.ok){
+                alert(data.error)// display the error message
+                return;
+            }
+            alert("Account created successfully!");
+            router.push("/login"); // redirect to login
+        }catch(error){
+            console.error("Register error:", error);
+            alert("Network error. Please check your connection and try again");
         }
-        // router.push("/login"); // redirect to login
     }
 
     return(
@@ -78,12 +98,12 @@ export default  function RegisterPage(){
                     onChange={e => setEmail(e.target.value)}
                 />
                 <input
-                    type = "value"
+                    type = "text"
                     placeholder = "Verification Code"
                     value={verifCode}
                     onChange = {e => setverifCode(e.target.value)}
                 />
-                <button type="button">Send Code</button>
+                <button type="button" onClick={handleSendCode}>Send Code</button>
                 <input
                     type = "password"
                     placeholder="Password"

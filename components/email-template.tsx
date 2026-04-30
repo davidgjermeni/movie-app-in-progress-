@@ -3,10 +3,10 @@ import { Html, Head, Body, Container, Text } from "@react-email/components";
 
 interface EmailTemplateProps {
   email: string;
-  verificationCode: string;
+  verifCode: string;
 }
 
-export function EmailTemplate({ verificationCode, email }: EmailTemplateProps) {
+export function EmailTemplate({ verifCode, email }: EmailTemplateProps) {
   const emailName = email.split("@")[0];
   return (
     <Html>
@@ -14,7 +14,7 @@ export function EmailTemplate({ verificationCode, email }: EmailTemplateProps) {
       <Body>
         <Container>
           <Text>Hello {emailName},</Text>
-          <Text>Your verification code is: <strong>{verificationCode}</strong></Text>
+          <Text>Your verification code is: <strong>{verifCode}</strong></Text>
           <Text>This code expires in 5 minutes.</Text>
         </Container>
       </Body>
