@@ -11,6 +11,8 @@ export async function POST(req: NextRequest){ // getting the request from Next.j
     
     const {email, password, verifCode } = await req.json(); // destructing the data from the request to variables
     const normalisedEmail = email.toLowerCase().trim();
+
+    
     //1: BASIC VALIDATION (doesnt touch the db)
     if (!email || !password || !verifCode){
         // if fields are missing, sent a error response back ( 400 = bad request )
@@ -24,7 +26,7 @@ export async function POST(req: NextRequest){ // getting the request from Next.j
 
     //basically here we check if the data is string then convert it
     //to a object so we can use it. If not the leave it as it is. ( avoiding any possible bugs )
-    //this happens because of Redis client / environment 
+    //this happens because of Redis client / environment might return it as a string
     const parsedData = typeof codeCheck === "string"
                         ? JSON.parse(codeCheck)
                         : codeCheck;

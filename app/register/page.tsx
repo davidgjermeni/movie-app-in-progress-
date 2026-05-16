@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react"; // to check if anyone is logged in
+import { Turnstile } from "@marsidev/react-turnstile";
 
 export default  function RegisterPage(){
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [verifCode, setverifCode] = useState("");
+    const [captchaToken, setCaptchaToken] = useState("");
     const allowedDomains = ["gmail.com","outlook.com","hotmail.com"]
     const emailDomain = email.split("@")[1];
     //useSession has data: user info and status.
@@ -33,7 +35,7 @@ export default  function RegisterPage(){
         const sendCode = await fetch("/api/sendCode",{
             method: "POST", //sending data
             headers: {"Content-Type": "application/json"}, //hey, its written in JSON format
-            body: JSON.stringify({email }), //The content.
+            body: JSON.stringify({email, captchaToken}), //The content.
         });
 
         const data = await sendCode.json();
@@ -68,7 +70,7 @@ export default  function RegisterPage(){
             const verifyRegister = await fetch("/api/verifyRegister",{
                 method: "POST", //sending data
                 headers: {"Content-Type": "application/json"}, //hey, its written in JSON format
-                body: JSON.stringify({email, password, verifCode}), //The content.
+                body: JSON.stringify({email, password, verifCode, captchaToken}), //The content.
             });
 
             const data = await verifyRegister.json();
@@ -109,6 +111,10 @@ export default  function RegisterPage(){
                     placeholder="Password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
+                />
+                <Turnstile
+                    siteKey = {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                    onSuccess= {(token) => setCaptchaToken(token)}
                 />
                 <button type="submit">Submit</button>
             </form>

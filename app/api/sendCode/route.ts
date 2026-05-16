@@ -10,12 +10,17 @@ const prisma = new PrismaClient(); // enabling the translator ( passing it to a 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest){ 
-    const {email} = await req.json(); // destructing the data from the request to variables
+    const {email, captchaToken} = await req.json(); // destructing the data from the request to variables
     const allowedDomains = ["gmail.com","outlook.com","hotmail.com"];
     const ip = req.headers.get("x-forwarded-for")??
                req.headers.get("x-real-ip")??
                "unknown" 
 
+    if (!captchaToken){
+        alert("Please complete the captcha.");
+        return;
+    }
+               
     if (!email){
         // if fields are missing, sent a error response back ( 400 = bad request )
         return NextResponse.json({error: "All fields required"}, {status: 400});
