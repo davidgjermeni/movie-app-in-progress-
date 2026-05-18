@@ -3,7 +3,9 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react"; // to check if anyone is logged in
+import { useEffect
 
+ } from "react";
 export default function LoginPage(){
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -13,12 +15,13 @@ export default function LoginPage(){
     //for readability
     const {data: session, status} = useSession();
 
+    useEffect(() => {
+        if (status === "authenticated"){
+            router.push("/homepage");
+        }
+    }, [session, status] );
     if(status === "loading"){
         return null;
-    }
-    if (status === "authenticated"){
-            router.push("/homepage");
-            return null;
     }
 
     async function handleSubmit(e: React.FormEvent){ //when login button clicked, execute function

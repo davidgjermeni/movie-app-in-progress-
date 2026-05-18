@@ -9,7 +9,7 @@ export default  function RegisterPage(){
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [verifCode, setverifCode] = useState("");
+    const [verifCode, setVerifCode] = useState("");
     const [captchaToken, setCaptchaToken] = useState("");
     const allowedDomains = ["gmail.com","outlook.com","hotmail.com"]
     const emailDomain = email.split("@")[1];
@@ -26,7 +26,8 @@ export default  function RegisterPage(){
             return null;
     }
 
-    async function handleSendCode(){
+// ==================== SEND CODE ====================
+    async function handleSendCode(){   
         if (!email){
             alert("Please enter your email first.")
             return;
@@ -48,6 +49,8 @@ export default  function RegisterPage(){
         alert("Email containing the verification code sent!")
 
     }
+
+// ==================== REGISTER ====================
     async function handleSubmit(e: React.FormEvent){
         e.preventDefault(); //no refresh
         if (!email || !password || !verifCode){
@@ -65,6 +68,11 @@ export default  function RegisterPage(){
             return;
         }
 
+        if (!captchaToken) {
+            alert("Please complete the captcha.");
+            return;
+        }
+
         try{
             //form is talking to verifyRegister api
             const verifyRegister = await fetch("/api/verifyRegister",{
@@ -73,7 +81,7 @@ export default  function RegisterPage(){
                 body: JSON.stringify({email, password, verifCode, captchaToken}), //The content.
             });
 
-            const data = await verifyRegister.json();
+            const data = await verifyRegister.json().catch(() => ({}));
 
             // did something go wrong?
             // If status was 200-299(success -> true)
@@ -103,7 +111,7 @@ export default  function RegisterPage(){
                     type = "text"
                     placeholder = "Verification Code"
                     value={verifCode}
-                    onChange = {e => setverifCode(e.target.value)}
+                    onChange = {e => setVerifCode(e.target.value)}
                 />
                 <button type="button" onClick={handleSendCode}>Send Code</button>
                 <input
@@ -112,12 +120,22 @@ export default  function RegisterPage(){
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                 />
-                <Turnstile
-                    siteKey = {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
-                    onSuccess= {(token) => setCaptchaToken(token)}
-                />
-                <button type="submit">Submit</button>
+                
+                <button type="submit">Create Account</button>
             </form>
+            <div>
+                <Turnstile
+                    siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                    onSuccess={(token) => {
+                        //console check if captcha works.
+                        console.log("✅ Turnstile Success! Token received:", token);
+                        setCaptchaToken(token);
+                    }}
+                    onError={(error) => console.log("❌ Turnstile Error:", error)}
+                    onExpire={() => console.log("⚠️ Turnstile token expired")}
+                    onBeforeInteractive={() => console.log("Turnstile is loading...")}
+                />
+            </div>
         </div>
     )
 //user types → boxes fill up → user hits submit → 
