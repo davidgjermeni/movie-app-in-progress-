@@ -2,7 +2,7 @@ export async function verifyCaptcha(token: string): Promise<boolean>{
     if (!token){
         return false;
     }
-    const cloudflare = "ttps://challenges.cloudflare.com/turnstile/v0/siteverify"
+    const cloudflare = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
     const askCloud = await fetch(
         cloudflare,{
             method: "POST",

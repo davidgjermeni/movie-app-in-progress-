@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react"; // to check if anyone is logged in
 import { Turnstile } from "@marsidev/react-turnstile";
+import { verifyCaptcha } from "../api/verifyCaptcha/verifyCaptcha";
 
 export default  function RegisterPage(){
     const router = useRouter();
@@ -12,14 +13,19 @@ export default  function RegisterPage(){
     const [verifCode, setVerifCode] = useState("");
     const [captchaToken, setCaptchaToken] = useState("");
     const allowedDomains = ["gmail.com","outlook.com","hotmail.com"]
-    const emailDomain = email.split("@")[1];
+
+    // emailDomain: "?" added in order to return undefined and avoid crashing.
+    // "??" if the code before is undefined or null do the following...
+    const emailDomain = email.split("@")[1]?.toLowerCase().trim() ?? "";
+
+
     //useSession has data: user info and status.
     //destructing and renaming the "data" to "session"
     //for readability
     const {data: session, status} = useSession();
 
     if(status === "loading"){
-        return null;
+        return <div>Loading...</div>;
     }
     if (status === "authenticated"){
             router.push("/homepage");
@@ -28,25 +34,50 @@ export default  function RegisterPage(){
 
 // ==================== SEND CODE ====================
     async function handleSendCode(){   
-        if (!email){
-            alert("Please enter your email first.")
-            return;
+        try{
+            if (!captchaToken){
+                alert("Please complete the captcha.")
+            }
+
+            const isCaptchaValid = await verifyCaptcha(captchaToken);
+
+            if (!isCaptchaValid){
+                alert("Captcha verification failed.")
+                return;
+            }
+
+            if (!email){
+                alert("Please enter your email first.")
+                return;
+            }
+        }catch(error){
+            console.error(error);
+            alert("Catch Error: Captcha")
         }
-        //form is talking to sendCode api
-        const sendCode = await fetch("/api/sendCode",{
-            method: "POST", //sending data
-            headers: {"Content-Type": "application/json"}, //hey, its written in JSON format
-            body: JSON.stringify({email, captchaToken}), //The content.
-        });
 
-        const data = await sendCode.json();
+        try{
+            //form is talking to sendCode api
+            const sendCode = await fetch("/api/sendCode",{
+                method: "POST", //sending data
+                headers: {"Content-Type": "application/json"}, //hey, its written in JSON format
+                body: JSON.stringify({email, captchaToken}), //The content.
+            });
 
-        if (!sendCode.ok){
-            alert(data.error);
-            return;
+            const data = await sendCode.json() // open the reply letter and read it as JSON
+                    .catch(() => ({})); // if reading fails (empty response, server crash etc), 
+                                        // return an empty object {} instead of crashing
+
+            if (!sendCode.ok){        // "if the response is NOT ok"
+                alert(data.error);    // "show me what went wrong"
+                return;               // "and stop here"
+            }
+
+            alert("Email containing the verification code sent!")
+        }catch(error){
+            console.error(error);
+            alert("Verification email code failed. Please check your connection and try again");
+
         }
-
-        alert("Email containing the verification code sent!")
 
     }
 
@@ -58,7 +89,7 @@ export default  function RegisterPage(){
             return;
         }
 
-        if (!allowedDomains.includes(emailDomain)){
+        if (!allowedDomains.includes(emailDomain)){                 // !!!! Need to get back on this and add a blacklist with all tempMails.
             alert("Only Gmail, Outlook and Hotmail are allowed.")
             return;
         }
@@ -81,7 +112,9 @@ export default  function RegisterPage(){
                 body: JSON.stringify({email, password, verifCode, captchaToken}), //The content.
             });
 
-            const data = await verifyRegister.json().catch(() => ({}));
+            const data = await verifyRegister.json() // open the reply letter and read it as JSON
+                .catch(() => ({})); // if reading fails (empty response, server crash etc), 
+                                    // return an empty object {} instead of crashing
 
             // did something go wrong?
             // If status was 200-299(success -> true)
@@ -94,7 +127,7 @@ export default  function RegisterPage(){
             router.push("/login"); // redirect to login
         }catch(error){
             console.error("Register error:", error);
-            alert("Network error. Please check your connection and try again");
+            alert("Register failed. Please check your connection and try again");
         }
     }
 

@@ -3,29 +3,42 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react"; // to check if anyone is logged in
-import { useEffect
+import { Turnstile } from "@marsidev/react-turnstile";
+import { verifyCaptcha } from "../api/verifyCaptcha/verifyCaptcha";
 
- } from "react";
 export default function LoginPage(){
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [captchaToken, setCaptchaToken] = useState("");
     const router = useRouter();
     //useSession has data: user info and status.
     //destructing and renaming the "data" to "session"
     //for readability
     const {data: session, status} = useSession();
 
-    useEffect(() => {
-        if (status === "authenticated"){
-            router.push("/homepage");
-        }
-    }, [session, status] );
+    // Here we use early Return instead of useEffect to avoid any renders being made (Page/Content Flashes etc.)
     if(status === "loading"){
-        return null;
+        return <div>Loading...</div>;
+    }
+    if (status === "authenticated"){
+            router.push("/homepage");
+            return null;
     }
 
     async function handleSubmit(e: React.FormEvent){ //when login button clicked, execute function
         e.preventDefault(); //Don't refresh ( Default behaviour: browser refreshes when forms are submitted )
+        try{
+            if (!captchaToken){
+                alert("Please complete the captcha first.")
+            }
+            const isCaptchaValid = await verifyCaptcha(captchaToken);
+            if (!isCaptchaValid){
+                alert("Captcha verification failed.")
+                return;
+            }
+        }catch(error){
+            
+        }
 
         //Send the data to NextAuth & control redirect
         const result = await signIn("credentials", {
@@ -60,6 +73,19 @@ export default function LoginPage(){
 
                 <button type = "submit">Login</button>
             </form>
+            <div>
+                <Turnstile
+                    siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                    onSuccess={(token) => {
+                        //console check if captcha works.
+                        console.log("✅ Turnstile Success! Token received:", token);
+                        setCaptchaToken(token);
+                    }}
+                    onError={(error) => console.log("❌ Turnstile Error:", error)}
+                    onExpire={() => console.log("⚠️ Turnstile token expired")}
+                    onBeforeInteractive={() => console.log("Turnstile is loading...")}
+                />
+            </div>
         </div>
     );
 }
